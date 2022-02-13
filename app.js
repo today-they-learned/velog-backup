@@ -20,5 +20,4 @@ const crawler = new Crawler(program.username, {
   cert: program.cert,
 });
 
-console.log('📙 백업을 시작합니다 / velog-backup');
 crawler.parse();

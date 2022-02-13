@@ -9,7 +9,7 @@ class Crawler {
     this.username = username; 
 
     if (!username) {
-      console.error('❌ 유저이름을 입력해주세요')
+      console.error('Error: 유저이름을 입력해주세요')
       process.exit(1);
     }
 
@@ -35,7 +35,6 @@ class Crawler {
       post.body = await this.getImage(post.body);
 
       await this.writePost(post);
-      console.log(`✅ " ${post.title} " 백업 완료`);
     });
   }
 
@@ -48,11 +47,11 @@ class Crawler {
       await this.__api.get(url);
     } catch (e) {
       if (e.response.status === 404) {
-        console.error(`⚠️  해당 유저를 찾을 수 없어요 \n username = ${this.username}`);
+        console.error(`Error: 해당 유저를 찾을 수 없어요 \n username = ${this.username}`);
         process.exit(1);
       }
 
-      console.error(e);
+      console.error("Error");
     }
 
     while (true) {
@@ -63,16 +62,13 @@ class Crawler {
           response = await this.__api.post(this.__grahpqlURL, PostsQuery(this.username));
         }
       } catch(e) {
-        console.error(`⚠️  벨로그에서 글 목록을 가져오는데 실패했습니다. \n error = ${e}`);
+        console.error(`Error:  벨로그에서 글 목록을 가져오는데 실패했습니다. \n error = ${e}`);
         process.exit(1);
       }
       
       posts = [...posts, ...response.data.data.posts];
       if (response.data.data.posts.length < 20) break;
     }
-
-    console.log(`✅ ${this.username}님의 모든 글(${posts.length} 개) 을 가져옴`);
-
     return posts;
   }
 
@@ -82,7 +78,7 @@ class Crawler {
     try {
       response = await this.__api.post(this.__grahpqlURL, PostQuery(this.username, url_slug));
     } catch (e) {
-      console.error(`⚠️  벨로그에서 글을 가져오는데 실패했습니다. \n error = ${e} url = ${url_slug}`);
+      console.error(`Error:  벨로그에서 글을 가져오는데 실패했습니다. \n error = ${e} url = ${url_slug}`);
       process.exit(1);
     }
     
@@ -97,17 +93,16 @@ class Crawler {
       const re = new RegExp(char, 'g');
       title = title.replace(re, '');
     }
-
-    const path = join('backup', 'content', `${title}.md`);
-
-    post.body = '---\n'
-                + `title: "${post.title}"\n`
-                + `description: "${post.short_description.replace(/\n/g, ' ')}"\n`
-                + `date: ${post.released_at}\n`
-                + `tags: ${JSON.stringify(post.tags)}\n`
-                + '---\n' + post.body;
-                
-    await fs.promises.writeFile(path, post.body, 'utf8');
+    
+    console.log(post.title);
+    this.tempLine();
+    console.log(post.body);
+    this.tempLine();
+    console.log(post.tags.join(","));
+    this.tempLine();
+    console.log(post.released_at);
+    this.tempLine();
+    console.log('&&&&&&end------');
   }
 
   async getImage(body) {
@@ -117,7 +112,12 @@ class Crawler {
       if (!url) return;
 
       const filename = url.replace(/\/\s*$/,'').split('/').slice(-2).join('-').trim();
-      const path = join('backup', 'images', decodeURI(filename));
+
+      const path = join('media', 'images', decodeURI(this.username+filename));
+
+      if (!fs.existsSync('media/images')){
+        fs.mkdirSync('media/images');
+    }
       
       this.__api({
         method: 'get',
@@ -125,12 +125,16 @@ class Crawler {
         responseType: 'stream',
       })
       .then(resp => resp.data.pipe(fs.createWriteStream(path)))
-      .catch(e => console.error(`⚠️ 이미지를 다운 받는데 오류가 발생했습니다 / url = ${url} , e = ${e}`));
+      .catch(e => console.error(`Error: 이미지를 다운 받는데 오류가 발생했습니다 / url = ${url} , e = ${e}`));
 
-      return `![](/images/${filename})`;
+      return `![](/images/${this.username+filename})`;
     });
 
     return body;
+  }
+
+  tempLine() {
+    console.log("!@#$%^&*(!*!&@%!$@!&*@%!@$!");
   }
 
 };
