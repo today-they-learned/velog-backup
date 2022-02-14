@@ -127,7 +127,7 @@ class Crawler {
       .then(resp => resp.data.pipe(fs.createWriteStream(path)))
       .catch(e => console.error(`Error: 이미지를 다운 받는데 오류가 발생했습니다 / url = ${url} , e = ${e}`));
 
-      return `![](/images/${this.username+filename})`;
+      return `![](https://api.todaytheylearn.com/media/images/${this.username+filename})`;
     });
 
     return body;
